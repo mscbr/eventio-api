@@ -8,6 +8,7 @@ export const mockUsers: IUser[] = [
     id: '5e4be7f9df7691001f54346d',
     updatedAt: '2018-12-18T13:34:49.265Z',
     createdAt: '2018-02-18T13:34:49.265Z',
+    password: 'qwerty',
   },
   {
     firstName: 'Natasha',
@@ -16,6 +17,7 @@ export const mockUsers: IUser[] = [
     id: '5e4be7f9df7691001f54346c',
     updatedAt: '2018-12-18T13:34:49.265Z',
     createdAt: '2018-02-18T13:34:49.265Z',
+    password: 'qwerty',
   },
   {
     firstName: 'Bruce',
@@ -24,6 +26,7 @@ export const mockUsers: IUser[] = [
     id: '5e4be7f9df7691001f54346b',
     updatedAt: '2018-12-18T13:34:49.265Z',
     createdAt: '2018-02-18T13:34:49.265Z',
+    password: 'qwerty',
   },
   {
     firstName: 'Steven',
@@ -32,6 +35,7 @@ export const mockUsers: IUser[] = [
     id: '5e4be7f9df7691001f54346f',
     updatedAt: '2018-12-18T13:34:49.265Z',
     createdAt: '2018-02-18T13:34:49.265Z',
+    password: 'qwerty',
   },
   {
     firstName: 'James',
@@ -40,6 +44,7 @@ export const mockUsers: IUser[] = [
     id: '5e4be7f9df7691001f543470',
     updatedAt: '2018-12-18T13:34:49.265Z',
     createdAt: '2018-02-18T13:34:49.265Z',
+    password: 'qwerty',
   },
   {
     firstName: 'Anthony',
@@ -48,5 +53,6 @@ export const mockUsers: IUser[] = [
     id: '5e4be7f9df7691001f543471',
     updatedAt: '2018-12-18T13:34:49.265Z',
     createdAt: '2018-02-18T13:34:49.265Z',
+    password: 'qwerty',
   },
 ];

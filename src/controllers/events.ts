@@ -1,10 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
+import { validationResult } from 'express-validator';
 
 import { IEvent, TCreateEvent, TPatchEvent } from 'models/event';
 import HttpError from 'models/httpError';
 import { mockEvents } from 'utils/mockData/events';
 
-const events: IEvent[] = [...mockEvents];
+let events: IEvent[] = [...mockEvents];
+
+export const getEvents = (req: Request, res: Response) => {
+  res.status(200).json(events);
+};
 
 export const getEventById = (
   req: Request,
@@ -30,7 +35,15 @@ export const getEventsByUser = (
   next(new HttpError('No events found', 404));
 };
 
-export const createEvent = (req: Request, res: Response) => {
+export const createEvent = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const errors = validationResult(req);
+  console.log(errors);
+  if (!errors.isEmpty()) return next(new HttpError('Invalid inputs', 422));
+
   const { title, description, startsAt, capacity }: TCreateEvent = req.body;
   const createdEvent: IEvent = {
     id: Date.now().toString(),
@@ -56,7 +69,36 @@ export const createEvent = (req: Request, res: Response) => {
   res.status(201).json(createdEvent);
 };
 
-// finish PATCH logic
-export const patchEvent = (req: Request, res: Response, next: NextFunction) => {
-  const { title, description, startsAt, capacity }: TPatchEvent = req.body;
+export const updateEvent = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { eventId } = req.params;
+  const { body }: { body: TPatchEvent } = req;
+
+  const targetEvent = events.find((event) => event.id === eventId);
+  if (!targetEvent) return next(new HttpError('Event not found', 404));
+  if (!body) return next(new HttpError('Request body was not provided', 400));
+
+  events = events.map((event) =>
+    event.id === targetEvent?.id
+      ? { ...targetEvent, ...(body as TPatchEvent) }
+      : event
+  );
+  res.status(200).json({ ...targetEvent, ...(body as TPatchEvent) });
+};
+
+export const deleteEvent = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { eventId } = req.params;
+
+  const targetEvent = events.find((event) => event.id === eventId);
+  if (!targetEvent) return next(new HttpError('Event not found', 404));
+
+  events = events.filter((event) => event.id !== targetEvent.id);
+  res.status(200).json({ message: 'Deleted event' });
 };

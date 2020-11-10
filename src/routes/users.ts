@@ -1,18 +1,24 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router } from 'express';
 
-import { getUserById } from 'controllers/users';
-
-import { IUser } from 'models/user';
-import { mockUsers } from 'utils/mockData/users';
-
-const users: IUser[] = [...mockUsers];
+import {
+  getUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  signup,
+  login,
+} from 'controllers/users';
 
 const router = Router();
 
-router.get('/', (req: Request, res: Response, next: NextFunction) => {
-  res.status(200).json(users);
-});
-
+router.get('/', getUsers);
 router.get('/:userId', getUserById);
+
+router.post('/signup', signup);
+router.post('/login', login);
+
+router.patch('/:userId', updateUser);
+
+router.delete(':/userId', deleteUser);
 
 export default router;
