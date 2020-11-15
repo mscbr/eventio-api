@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { validationResult } from 'express-validator';
 
 import { IUser, TCreateUser, TPatchUser } from 'models/user';
 import HttpError from 'models/httpError';
@@ -23,6 +24,9 @@ export const getUserById = (
 };
 
 export const updateUser = (req: Request, res: Response, next: NextFunction) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return next(new HttpError('Invalid inputs', 422));
+
   const { userId } = req.params;
   const { body }: { body: TPatchUser } = req;
 
@@ -48,7 +52,10 @@ export const deleteUser = (req: Request, res: Response, next: NextFunction) => {
   res.status(200).json({ message: 'Deleted user' });
 };
 
-export const signup = (req: Request, res: Response) => {
+export const signup = (req: Request, res: Response, next: NextFunction) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return next(new HttpError('Invalid inputs', 422));
+
   const { firstName, lastName, email, password }: TCreateUser = req.body;
   const createdUser: IUser = {
     id: Date.now().toString(),
@@ -66,6 +73,8 @@ export const signup = (req: Request, res: Response) => {
 };
 
 export const login = (req: Request, res: Response, next: NextFunction) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return next(new HttpError('Invalid inputs', 422));
   const { email, password } = req.body;
 
   const identifiedUser = users.find(

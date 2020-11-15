@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { check } from 'express-validator';
+import { body } from 'express-validator';
 
 import {
   getEvents,
@@ -9,6 +9,7 @@ import {
   updateEvent,
   deleteEvent,
 } from 'controllers/events';
+import { objectKeys } from 'utils/validation/validators';
 
 const router = Router();
 
@@ -20,12 +21,24 @@ router.get('/user/:userId', getEventsByUser);
 router.post(
   '/',
   [
-    check(['title', 'description, startsAt']).notEmpty(),
-    check('capacity').isInt({ min: 1, max: 50 }),
+    body().custom(objectKeys(['title', 'description', 'startsAt', 'capacity'])),
+    body(['title', 'description']).notEmpty().trim().escape(),
+    body('startsAt').isISO8601(),
+    body('capacity').isInt({ min: 1, max: 50 }),
   ],
   createEvent
 );
-router.patch('/:eventId', updateEvent);
+router.patch(
+  '/:eventId',
+  [
+    body().custom(objectKeys(['title', 'description', 'startsAt', 'capacity'])),
+    body('title').if(body('title').exists()).isString().trim(),
+    body('description').if(body('description').exists()).isString().trim(),
+    body('startsAt').if(body('startsAt').exists()).isISO8601(),
+    body('capacity').if(body('capacity').exists()).isInt({ min: 1, max: 50 }),
+  ],
+  updateEvent
+);
 
 router.delete('/:eventId', deleteEvent);
 

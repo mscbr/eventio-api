@@ -41,7 +41,6 @@ export const createEvent = (
   next: NextFunction
 ) => {
   const errors = validationResult(req);
-  console.log(errors);
   if (!errors.isEmpty()) return next(new HttpError('Invalid inputs', 422));
 
   const { title, description, startsAt, capacity }: TCreateEvent = req.body;
@@ -68,12 +67,14 @@ export const createEvent = (
 
   res.status(201).json(createdEvent);
 };
-
 export const updateEvent = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return next(new HttpError('Invalid inputs', 422));
+
   const { eventId } = req.params;
   const { body }: { body: TPatchEvent } = req;
 
