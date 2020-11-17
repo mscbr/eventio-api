@@ -1,41 +1,67 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 
-import { IEvent, TCreateEvent, TPatchEvent } from 'models/event';
+import { Event, TCreateEvent, TPatchEvent } from 'models/event';
 import HttpError from 'models/httpError';
-import { mockEvents } from 'utils/mockData/events';
 
-let events: IEvent[] = [...mockEvents];
-
-export const getEvents = (req: Request, res: Response) => {
-  res.status(200).json(events);
+export const getEvents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  let events = [];
+  try {
+    events = await Event.find().populate(['owner', 'attendees']);
+  } catch (err) {
+    return next(new HttpError(err.message, 500));
+  }
+  res
+    .status(200)
+    .json(events.map((event) => event.toObject({ getters: true })));
 };
 
-export const getEventById = (
+export const getEventById = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   const { eventId } = req.params;
-  const targetEvent = events.find((event) => event.id === eventId);
 
-  if (targetEvent) return res.status(200).json(targetEvent);
+  let event;
+  try {
+    event = await Event.findById(eventId).populate(['owner', 'attendees']);
+  } catch (err) {
+    return next(new HttpError(err.message, 500));
+  }
+  if (event) return res.status(200).json(event.toObject({ getters: true }));
   next(new HttpError('Event not found', 404));
 };
 
-export const getEventsByUser = (
+export const getEventsByUser = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   const { userId } = req.params;
-  const targetEvents = events.filter((event) => event.owner.id === userId);
 
-  if (targetEvents.length) return res.status(200).json(targetEvents);
+  let events = [];
+  try {
+    events = await Event.find({ owner: userId }).populate([
+      'owner',
+      'attendees',
+    ]);
+  } catch (err) {
+    return next(new HttpError(err.message, 500));
+  }
+
+  if (events.length)
+    return res
+      .status(200)
+      .json(events.map((event) => event.toObject({ getters: true })));
   next(new HttpError('No events found', 404));
 };
 
-export const createEvent = (
+export const createEvent = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -44,30 +70,24 @@ export const createEvent = (
   if (!errors.isEmpty()) return next(new HttpError('Invalid inputs', 422));
 
   const { title, description, startsAt, capacity }: TCreateEvent = req.body;
-  const createdEvent: IEvent = {
-    id: Date.now().toString(),
+  const createdEvent = new Event({
     title,
     description,
     startsAt,
     capacity,
-    owner: {
-      firstName: 'Thor',
-      lastName: 'Odinson',
-      email: 'thor@strv.com',
-      id: '5e4be7f9df7691001f54346d',
-      updatedAt: '2018-12-18T13:34:49.265Z',
-      createdAt: '2018-02-18T13:34:49.265Z',
-    },
+    owner: '5fb92d36582d7ac96271a924',
     attendees: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
+  });
 
-  events.push(createdEvent);
+  try {
+    await createdEvent.save();
+  } catch (err) {
+    return next(new HttpError(err.message, 500));
+  }
 
-  res.status(201).json(createdEvent);
+  res.status(201).json(createdEvent.toObject({ getters: true }));
 };
-export const updateEvent = (
+export const updateEvent = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -78,28 +98,29 @@ export const updateEvent = (
   const { eventId } = req.params;
   const { body }: { body: TPatchEvent } = req;
 
-  const targetEvent = events.find((event) => event.id === eventId);
-  if (!targetEvent) return next(new HttpError('Event not found', 404));
   if (!body) return next(new HttpError('Request body was not provided', 400));
 
-  events = events.map((event) =>
-    event.id === targetEvent?.id
-      ? { ...targetEvent, ...(body as TPatchEvent) }
-      : event
-  );
-  res.status(200).json({ ...targetEvent, ...(body as TPatchEvent) });
+  let event;
+  try {
+    event = await Event.findByIdAndUpdate(eventId, body, { new: true });
+  } catch (err) {
+    return next(new HttpError(err.message, 500));
+  }
+  res.status(200).json(event?.toObject({ getters: true }));
 };
 
-export const deleteEvent = (
+export const deleteEvent = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   const { eventId } = req.params;
 
-  const targetEvent = events.find((event) => event.id === eventId);
-  if (!targetEvent) return next(new HttpError('Event not found', 404));
+  try {
+    await Event.findByIdAndDelete(eventId);
+  } catch (err) {
+    return next(new HttpError(err.message, 500));
+  }
 
-  events = events.filter((event) => event.id !== targetEvent.id);
-  res.status(200).json({ message: 'Deleted event' });
+  res.status(200).json({ message: 'Event deleted successfully' });
 };

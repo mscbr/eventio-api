@@ -31,7 +31,9 @@ router.post(
 router.patch(
   '/:eventId',
   [
-    body().custom(objectKeys(['title', 'description', 'startsAt', 'capacity'])),
+    body().custom(
+      objectKeys(['title', 'description', 'startsAt', 'capacity', 'attendees'])
+    ),
     body('title').if(body('title').exists()).isString().trim(),
     body('description').if(body('description').exists()).isString().trim(),
     body('startsAt').if(body('startsAt').exists()).isISO8601(),
