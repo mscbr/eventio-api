@@ -1,9 +1,12 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
+import mongoose from 'mongoose';
 
 import eventsRoutes from 'routes/events';
 import usersRoutes from 'routes/users';
 import HttpError from 'models/httpError';
+
+const { API_KEY, PORT } = process.env;
 
 const app: Application = express();
 
@@ -32,6 +35,13 @@ app.use(
   }
 );
 
-app.listen(5000, () => {
-  console.log('app running on 5000');
-});
+if (!API_KEY) throw new Error("Couldn't retrieve API Key");
+
+mongoose
+  .connect(API_KEY)
+  .then(() => {
+    app.listen(PORT || 5000, () => {
+      console.log('app running on PORT:', PORT);
+    });
+  })
+  .catch((err) => console.log(err));
