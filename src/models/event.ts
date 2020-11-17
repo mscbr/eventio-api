@@ -1,4 +1,25 @@
+import { Schema, model } from 'mongoose';
+
 import { IUser } from './user';
+
+export const EventModel = model(
+  'Event',
+  new Schema({
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    startsAt: { type: Date, min: Date.now, required: true },
+    capacity: { type: Number, min: 1, required: true },
+    owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    attendees: [{ type: Schema.Types.ObjectId, ref: 'User', required: true }],
+    createdAt: { type: Date, min: Date.now, default: Date.now },
+    updatedAt: {
+      type: Date,
+      min: Date.now,
+      default: Date.now,
+      setDefaultsOnInsert: true,
+    },
+  })
+);
 
 export interface IEvent {
   id: string;
