@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-import { IUser, TCreateUser, TPatchUser, User } from 'models/user';
+import { TCreateUser, TPatchUser, User } from 'models/user';
 import HttpError from 'models/httpError';
-import { mockUsers } from 'utils/mockData/users';
 
-let users: IUser[] = [...mockUsers];
+const { JWT_SECRET_KEY } = process.env;
 
 export const getUsers = async (
   req: Request,
@@ -40,34 +41,34 @@ export const getUserById = async (
   next(new HttpError('User not found', 404));
 };
 
-export const updateUser = (req: Request, res: Response, next: NextFunction) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return next(new HttpError('Invalid inputs', 422));
+// export const updateUser = (req: Request, res: Response, next: NextFunction) => {
+//   const errors = validationResult(req);
+//   if (!errors.isEmpty()) return next(new HttpError('Invalid inputs', 422));
 
-  const { userId } = req.params;
-  const { body }: { body: TPatchUser } = req;
+//   const { userId } = req.params;
+//   const { body }: { body: TPatchUser } = req;
 
-  const targetUser = users.find((user) => user.id === userId);
-  if (!targetUser) return next(new HttpError('Event not found', 404));
-  if (!body) return next(new HttpError('Request body was not provided', 400));
+//   const targetUser = users.find((user) => user.id === userId);
+//   if (!targetUser) return next(new HttpError('Event not found', 404));
+//   if (!body) return next(new HttpError('Request body was not provided', 400));
 
-  users = users.map((user) =>
-    user.id === targetUser?.id
-      ? { ...targetUser, ...(body as TPatchUser) }
-      : user
-  );
-  res.status(200).json({ ...targetUser, ...(body as TPatchUser) });
-};
+//   users = users.map((user) =>
+//     user.id === targetUser?.id
+//       ? { ...targetUser, ...(body as TPatchUser) }
+//       : user
+//   );
+//   res.status(200).json({ ...targetUser, ...(body as TPatchUser) });
+// };
 
-export const deleteUser = (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = req.params;
+// export const deleteUser = (req: Request, res: Response, next: NextFunction) => {
+//   const { userId } = req.params;
 
-  const targetUser = users.find((user) => user.id === userId);
-  if (!targetUser) return next(new HttpError('Event not found', 404));
+//   const targetUser = users.find((user) => user.id === userId);
+//   if (!targetUser) return next(new HttpError('Event not found', 404));
 
-  users = users.filter((user) => user.id !== targetUser.id);
-  res.status(200).json({ message: 'Deleted user' });
-};
+//   users = users.filter((user) => user.id !== targetUser.id);
+//   res.status(200).json({ message: 'Deleted user' });
+// };
 
 export const signup = async (
   req: Request,
@@ -78,11 +79,13 @@ export const signup = async (
   if (!errors.isEmpty()) return next(new HttpError('Invalid inputs', 422));
 
   const { firstName, lastName, email, password }: TCreateUser = req.body;
+  const hashedPass = await bcrypt.hash(password, 12);
+
   const createdUser = new User({
     firstName,
     lastName,
     email,
-    password,
+    password: hashedPass,
   });
 
   try {
@@ -112,12 +115,29 @@ export const login = async (
     );
   }
 
-  console.log(user);
-
-  if (!user || user.password !== password)
+  if (!user)
     return next(
       new HttpError('Could not login with provided credentials', 401)
     );
 
-  res.status(200).json(user);
+  const isValidPassword = await bcrypt.compare(password, user.password);
+
+  if (!isValidPassword)
+    return next(
+      new HttpError('Could not login with provided credentials', 401)
+    );
+
+  const token = await jwt.sign(
+    { id: user.id, email },
+    JWT_SECRET_KEY as string,
+    {
+      expiresIn: '2 days',
+    }
+  );
+
+  const { id, firstName, lastName, createdAt, updatedAt } = user;
+  res
+    .status(200)
+    .header('Authorization', token)
+    .json({ id, firstName, lastName, email, createdAt, updatedAt });
 };

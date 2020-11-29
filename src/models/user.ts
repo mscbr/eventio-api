@@ -8,7 +8,7 @@ export interface IUser {
   email: string;
   createdAt: string; // ISO-formatted datetime
   updatedAt: string; // ISO-formatted datetime
-  password?: string;
+  password: string;
 }
 
 export type TCreateUser = Pick<

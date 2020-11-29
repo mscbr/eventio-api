@@ -4,17 +4,15 @@ import { body } from 'express-validator';
 import {
   getUsers,
   getUserById,
-  updateUser,
-  deleteUser,
+  // updateUser,
+  // deleteUser,
   signup,
   login,
 } from 'controllers/users';
+import validateToken from 'middleware/validateToken';
 import { objectKeys } from 'utils/validation/validators';
 
 const router = Router();
-
-router.get('/', getUsers);
-router.get('/:userId', getUserById);
 
 router.post(
   '/signup',
@@ -28,18 +26,21 @@ router.post(
 );
 router.post('/login', [body('email', 'password').not().isEmpty()], login);
 
-router.patch(
-  '/:userId',
-  [
-    body().custom(objectKeys(['firstName', 'lastName', 'password', 'email'])),
-    body('firstName').if(body('firstName').exists()).isString().trim(),
-    body('lastName').if(body('lastName').exists()).isString().trim(),
-    body('password').if(body('password').exists()).isLength({ min: 1 }),
-    body('email').if(body('email').exists()).normalizeEmail().isEmail(),
-  ],
-  updateUser
-);
+// router.patch(
+//   '/:userId',
+//   [
+//     body().custom(objectKeys(['firstName', 'lastName', 'password', 'email'])),
+//     body('firstName').if(body('firstName').exists()).isString().trim(),
+//     body('lastName').if(body('lastName').exists()).isString().trim(),
+//     body('password').if(body('password').exists()).isLength({ min: 1 }),
+//     body('email').if(body('email').exists()).normalizeEmail().isEmail(),
+//   ],
+//   updateUser
+// );
 
-router.delete(':/userId', deleteUser);
+// router.delete(':/userId', deleteUser);
+router.use(validateToken);
+router.get('/', getUsers);
+router.get('/:userId', getUserById);
 
 export default router;

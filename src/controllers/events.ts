@@ -75,7 +75,7 @@ export const createEvent = async (
     description,
     startsAt,
     capacity,
-    owner: '5fb92d36582d7ac96271a924',
+    owner: req.userData?.id || null,
     attendees: [],
   });
 
@@ -102,7 +102,12 @@ export const updateEvent = async (
 
   let event;
   try {
-    event = await Event.findByIdAndUpdate(eventId, body, { new: true });
+    event = await Event.findOneAndUpdate(
+      { _id: eventId, owner: req.userData?.id },
+      body,
+      { new: true }
+    );
+    if (!event) return next(new HttpError('Could not update event', 403));
   } catch (err) {
     return next(new HttpError(err.message, 500));
   }
@@ -116,8 +121,13 @@ export const deleteEvent = async (
 ) => {
   const { eventId } = req.params;
 
+  let event;
   try {
-    await Event.findByIdAndDelete(eventId);
+    event = await Event.findOneAndDelete({
+      _id: eventId,
+      owner: req.userData?.id,
+    });
+    if (!event) return next(new HttpError('Could not delete event', 403));
   } catch (err) {
     return next(new HttpError(err.message, 500));
   }

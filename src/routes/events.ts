@@ -9,9 +9,12 @@ import {
   updateEvent,
   deleteEvent,
 } from 'controllers/events';
+import validateToken from 'middleware/validateToken';
 import { objectKeys } from 'utils/validation/validators';
 
 const router = Router();
+
+router.use(validateToken);
 
 router.get('/', getEvents);
 
