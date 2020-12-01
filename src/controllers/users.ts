@@ -1,12 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 
-import { TCreateUser, TPatchUser, User } from 'models/user';
+import { TCreateUser, User } from 'models/user';
 import HttpError from 'models/httpError';
-
-const { JWT_SECRET_KEY } = process.env;
+import { createTokens } from 'utils/auth';
 
 export const getUsers = async (
   req: Request,
@@ -127,17 +125,15 @@ export const login = async (
       new HttpError('Could not login with provided credentials', 401)
     );
 
-  const token = await jwt.sign(
-    { id: user.id, email },
-    JWT_SECRET_KEY as string,
-    {
-      expiresIn: '2 days',
-    }
-  );
-
+  const [token, refreshToken] = await createTokens(user);
   const { id, firstName, lastName, createdAt, updatedAt } = user;
+  if (token && refreshToken) {
+    res.set('Access-Control-Expose-Headers', 'Authorization, refresh-token');
+    res.set('Authorization', token);
+    res.set('refresh-token', refreshToken);
+  }
+  req.userData = { id, email };
   res
     .status(200)
-    .header('Authorization', token)
     .json({ id, firstName, lastName, email, createdAt, updatedAt });
 };

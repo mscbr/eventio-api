@@ -10,7 +10,7 @@ import {
   login,
 } from 'controllers/users';
 import validateToken from 'middleware/validateToken';
-import { objectKeys } from 'utils/validation/validators';
+import { objectKeys } from 'utils/bodyValidation';
 
 const router = Router();
 
