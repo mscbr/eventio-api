@@ -134,3 +134,53 @@ export const deleteEvent = async (
 
   res.status(200).json({ message: 'Event deleted successfully' });
 };
+
+export const attendEvent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const {
+    userData,
+    params: { eventId },
+  } = req;
+
+  let event;
+  try {
+    event = await Event.findById(eventId);
+    if (event?.attendees.indexOf(userData?.id as never) !== -1)
+      return next(new HttpError('User already attends event', 409));
+    event?.attendees.push(userData?.id as never);
+    event?.save();
+  } catch (err) {
+    return next(new HttpError(err.message, 500));
+  }
+  res.status(200).json(event?.toObject({ getters: true }));
+};
+
+export const unAttendEvent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const {
+    userData,
+    params: { eventId },
+  } = req;
+
+  let event;
+  try {
+    event = await Event.findById(eventId);
+    if (event?.attendees.indexOf(userData?.id as never) === -1)
+      return next(new HttpError('User does not attend event', 409));
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    event?.attendees.pull(userData?.id);
+
+    event?.save();
+  } catch (err) {
+    return next(new HttpError(err.message, 500));
+  }
+  res.status(200).json(event?.toObject({ getters: true }));
+};

@@ -8,6 +8,8 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
+  attendEvent,
+  unAttendEvent,
 } from 'controllers/events';
 import validateToken from 'middleware/validateToken';
 import { objectKeys } from 'utils/bodyValidation';
@@ -46,5 +48,8 @@ router.patch(
 );
 
 router.delete('/:eventId', deleteEvent);
+
+router.post('/:eventId/attendees/me', attendEvent);
+router.delete('/:eventId/attendees/me', unAttendEvent);
 
 export default router;
