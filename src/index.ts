@@ -1,6 +1,7 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
+import cors from 'cors';
 
 import eventsRoutes from 'routes/events';
 import usersRoutes from 'routes/users';
@@ -19,16 +20,24 @@ declare global {
 
 const app: Application = express();
 
+app.use(cors());
 app.use(bodyParser.json());
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization, refresh-token'
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization, refresh-token, APIKey'
   );
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
 
+  next();
+});
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const { apikey } = req.headers;
+  if (!apikey) return next(new HttpError('Missing APIKey', 401));
+  if (apikey !== API_KEY) return next(new HttpError('Invalid APIKey', 401));
   next();
 });
 
@@ -62,7 +71,7 @@ mongoose
   .then(() => {
     mongoose.set('useFindAndModify', false);
     app.listen(PORT || 5000, () => {
-      console.log('app running on PORT:', PORT);
+      console.log('app running on PORT:', PORT || 5000);
     });
   })
   .catch((err) => console.log(err));
