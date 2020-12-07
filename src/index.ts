@@ -7,7 +7,7 @@ import eventsRoutes from 'routes/events';
 import usersRoutes from 'routes/users';
 import HttpError from 'models/httpError';
 
-const { API_KEY, PORT } = process.env;
+const { API_KEY, CLIENT_API_KEY, PORT } = process.env;
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -37,7 +37,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use((req: Request, res: Response, next: NextFunction) => {
   const { apikey } = req.headers;
   if (!apikey) return next(new HttpError('Missing APIKey', 401));
-  if (apikey !== API_KEY) return next(new HttpError('Invalid APIKey', 401));
+  if (apikey !== CLIENT_API_KEY)
+    return next(new HttpError('Invalid APIKey', 401));
   next();
 });
 

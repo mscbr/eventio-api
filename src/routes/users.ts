@@ -24,7 +24,11 @@ router.post(
   ],
   signup
 );
-router.post('/login', [body('email', 'password').not().isEmpty()], login);
+router.post(
+  '/login',
+  [body().custom(objectKeys(['refreshToken', 'password', 'email']))],
+  login
+);
 
 // router.patch(
 //   '/:userId',
